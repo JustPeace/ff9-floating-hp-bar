@@ -1,21 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Mod>
   <Name>Floating HP Bar</Name>
-  <Version>1.1</Version>
+  <Version>1.2</Version>
   <InstallationPath>FloatingHPBar</InstallationPath>
-  <ReleaseDate>2026-10-23</ReleaseDate>
+  <ReleaseDate>2026-10-27</ReleaseDate>
   <ReleaseDateOriginal>2026-10-22</ReleaseDateOriginal>
   <Author>JustPeace</Author>
-  <Description>Displays a polished floating HP bar with the enemy's name and a numeric HP readout above every enemy during battle.
-
-- Enemy name plate above the bar (uses the game's translated battle text)
-- Smooth fill animation, delayed damage trail and a short hit flash
-- Colour shifts from green to gold to red as the enemy loses HP
-- Optional "current / max" display
-- HP is read through btl_para.GetLogicalHP: vanilla mode shows the enemy's real data HP, while Alternate Fantasy mode automatically removes the scripted +10 000 padding only on flagged bosses. This fixes bosses such as Necron being shown 10 000 HP too low in 1.0.
-
-Configuration is in FloatingHPBar/FloatingHPBar.ini.</Description>
-  <PatchNotes>Version 1.1: enemy names above the bar; fixed boss HP display (no more unconditional -10 000); added HpMode, ShowName and NameFontSize options.
+  <Description>Displays floating enemy names and HP bars. Auto mode removes the 10000 HP script reserve for vanilla non-dying bosses identified by Memoria, and uses engine logical HP for Alternate Fantasy. Configure FloatingHPBar/FloatingHPBar.ini.</Description>
+  <PatchNotes>Version 1.2: fixed vanilla scripted bosses showing 10000 extra HP in Auto mode. Display-only change; no battle data modifications. Compiled and calculation-tested; in-game boss regression pending.
+Version 1.1: enemy names above the bar; fixed boss HP display (no more unconditional -10 000); added HpMode, ShowName and NameFontSize options.
 Version 1.0: first release.</PatchNotes>
   <Category>Gameplay</Category>
   <Website>

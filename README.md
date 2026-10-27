@@ -1,4 +1,4 @@
-# Floating HP Bar 1.1
+# Floating HP Bar 1.2
 
 English | [简体中文](README.zh-CN.md)
 
@@ -12,21 +12,25 @@ Edit `FloatingHPBar/FloatingHPBar.ini`; changes apply at the next battle. Restar
 | --- | --- | --- |
 | Enabled | 1 | Enable the overlay |
 | ShowMaxHp | 0 | Show current / maximum HP |
-| HpMode | 0 | 0: engine logical HP; 1: raw HP; 2: legacy forced subtraction |
+| HpMode | 0 | 0: automatic script reserve handling; 1: raw HP; 2: legacy vanilla subtraction |
 | ShowName | 1 | Show enemy names |
 | NameFontSize | 15 | Name size at 1080p |
 | BarWidth / BarHeight | 156 / 22 | Bar size at 1080p |
 | OffsetY | 8 | Additional vertical offset |
 | ShowOnlyTargetable | 0 | Hide enemies that cannot be targeted |
 
-The default HP mode calls `btl_para.GetLogicalHP`. In vanilla mode it displays the enemy's actual data HP; in Alternate Fantasy mode the engine removes scripted 10,000 HP padding on flagged bosses. Legacy mode can show incorrect values and is retained only as an explicit override. Alternate Fantasy compatibility still needs game testing.
+Auto mode removes the 10,000 HP script reserve from vanilla enemies identified by Memoria's `IsNonDyingVanillaBoss` predicate, including its encounter exception, when maximum HP exceeds 10,000. Other enemies retain engine logical HP; high HP alone never triggers subtraction. Alternate Fantasy uses `GetLogicalHP`, so flagged padding is removed exactly once. Current displayed HP cannot fall below zero.
+
+Version 1.1 incorrectly assumed `GetLogicalHP` already removed the reserve in vanilla mode; it actually returns raw HP there. This caused some bosses and special enemies to display 10,000 excess HP. Version 1.2 corrects the display only, without modifying HP, damage, or scripts. Large gameplay overhauls may change the encounter assumptions; use `HpMode = 1` to inspect raw HP. Scripted encounters can still end on conditions other than HP.
+
+Compilation and 13 calculation checks passed using the actual HP calculation method with stubbed engine predicates. **In-game boss regression and Alternate Fantasy compatibility remain unverified.**
 
 ## Limitations and troubleshooting
 
 - The screen-space overlay does not participate in 3D occlusion. Hidden slave parts are excluded, and off-screen enemies are hidden.
 - Enemy names use the game's battle text; long names shrink to fit.
 - Vertical placement has not been calibrated across all battles. Adjust `OffsetY` if needed.
-- Check `Memoria.log` for `[FloatingHPBar] Version 1.1 initialised` and per-enemy HP diagnostics.
+- Check `Memoria.log` for `[FloatingHPBar] Version 1.2 initialised` and per-enemy HP diagnostics.
 - Disable the game's no-encounter and 9,999-damage boosters when testing encounters and HP changes.
 
 ## Requirements and validation status
@@ -38,7 +42,7 @@ The default HP mode calls `btl_para.GetLogicalHP`. In vanilla mode it displays t
 
 ## Installation
 
-1. Download `FloatingHPBar-v1.1.zip` from Releases and close the game.
+1. Download `FloatingHPBar-v1.2.zip` from Releases and close the game.
 2. Extract it into the game directory containing `FF9_Launcher.exe`. The resulting path must be `FloatingHPBar/StreamingAssets/Scripts/Memoria.Scripts.FloatingHPBar.dll` without an extra nested mod folder.
 3. Enable the mod in the Memoria launcher's Mods tab and restart the game.
 4. If it is not listed, append `"FloatingHPBar"` to the existing `FolderNames` and `Priorities` lists in the `[Mod]` section of `Memoria.ini`. Preserve the other entries and their order.

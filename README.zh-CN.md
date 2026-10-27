@@ -1,4 +1,4 @@
-# Floating HP Bar 1.1
+# Floating HP Bar 1.2
 
 在战斗中显示敌人名字、浮动血条与 HP 数字。
 
@@ -15,7 +15,7 @@
 
 ## 安装
 
-1. 从 Releases 下载 `FloatingHPBar-v1.1.zip` 并退出游戏。
+1. 从 Releases 下载 `FloatingHPBar-v1.2.zip` 并退出游戏。
 2. 解压到游戏根目录（有 `FF9_Launcher.exe` 的目录），确认形成 `FloatingHPBar/StreamingAssets/Scripts/Memoria.Scripts.FloatingHPBar.dll`，不要套两层文件夹。
 3. 在 Memoria 启动器的 Mods 页面启用本 mod，然后重启游戏。
 4. 如果启动器未列出它，在 `Memoria.ini` 的 `[Mod]` 中，将 `"FloatingHPBar"` 追加到现有 `FolderNames` 和 `Priorities` 列表。保留其他 mod 的名称与顺序，不要用示例覆盖整行。
@@ -25,23 +25,21 @@
 
 退出游戏，在启动器中停用本 mod，或从 `FolderNames` / `Priorities` 移除其名称，再删除 `FloatingHPBar` 文件夹。
 
-## 关于 Boss 血量（1.1 修正）
+## 关于 Boss 血量（1.2 修正）
 
-1.0 版本会按 `btl_para.IsNonDyingVanillaBoss` 对所有“不死系 Boss”强制减 10000。这个判断只表示“这个 Boss 在剧情里不能被真正打死”，**并不代表它的数据里一定多垫了 10000 点血**。例如尼克罗的真实 HP 就是 65535，1.0 会错误地显示成 55535。
+1.1 错把原版 `btl_para.GetLogicalHP` 的返回值当作已经扣除脚本预留的血量；实际上该函数在原版模式下直接返回内部 HP，导致部分 Boss 和特殊敌人多显示 10000。
 
-1.1 默认改为读取 `btl_para.GetLogicalHP`，也就是游戏自己使用的逻辑血量：
-
-- **原版模式**（`CustomBattleFlagsMeaning = 0`）：显示敌人数据里的真实 HP，与游戏自身的扫描/图鉴一致，不再做任何减法。
-- **Alternate Fantasy 模式**（`CustomBattleFlagsMeaning = 1`）：如果敌人的 `FLG_NON_DYING_BOSS` 标记存在，Memoria 会自动把 +10000 的脚本血量扣掉，再显示逻辑 HP。
-
-`FloatingHPBar.ini` 里的 `HpMode` 可以覆盖这个行为：
+1.2 默认显示可消耗的血量：原版使用引擎 `IsNonDyingVanillaBoss` 的战斗列表和例外规则，对最大 HP > 10000 的对应单位扣除 10000 脚本预留值；当前值最低为 0。普通敌人即使 HP 超过 10000 也不因此扣减。Alternate Fantasy 继续使用引擎 `GetLogicalHP`，不会重复扣除。
 
 | HpMode | 行为 |
 |---|---|
-| `0`（默认） | 自动：原版显示真实 HP；Alternate Fantasy 自动扣 +10000 |
-| `1` | 始终显示原始数据 HP，不做任何修正 |
-| `2` | 旧版行为：对 `IsNonDyingVanillaBoss` 且最大 HP > 10000 的敌人强制减 10000（不推荐） |
+| `0`（默认） | 自动：原版扣除引擎识别的 Boss 脚本预留值；其他模式使用引擎逻辑 HP |
+| `1` | 原始数据 HP，包含脚本预留值，供排查用 |
+| `2` | 保留旧版兼容行为，只处理原版不死 Boss |
 
+只修改显示，不修改敌人实际 HP、伤害或战斗脚本。此规则依据当前 Memoria 的原版战斗列表；大幅改写原版战斗脚本的 Mod 可使用 `HpMode = 1` 查看原始值。特殊剧情战斗仍可能按回合或其他条件结束，血条不承诺代表胜利进度。
+
+验证：已做编译与 HP 计算分支回归，尚未完成游戏内 Boss 战斗回归。
 
 ## 配置
 

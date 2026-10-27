@@ -1,8 +1,7 @@
 // FloatingHPBar for FINAL FANTASY IX (Memoria engine)
 // Shows a floating HP bar with the enemy's name and a numeric HP readout above
-// every enemy in battle. HP is read through the game's own logical-HP helper,
-// so vanilla bosses show their real data HP and Alternate Fantasy bosses show
-// their logical HP (raw HP - 10 000) automatically.
+// every enemy in battle. Auto mode removes the script reserve from vanilla
+// non-dying bosses and uses the engine's logical HP for Alternate Fantasy.
 
 using System;
 using System.Collections.Generic;
@@ -80,7 +79,7 @@ namespace FloatingHPBar
         // ------------------------------------------------------------------
         private static Boolean s_enabled = true;
         private static Boolean s_showMaxHp = false;
-        // 0 = Auto (vanilla: raw HP, Alternate Fantasy: logical HP without the +10 000 padding)
+        // 0 = Auto (vanilla: remove non-dying boss reserve; otherwise engine logical HP)
         // 1 = Raw data HP only
         // 2 = Force the old "subtract 10 000 from non-dying bosses" behaviour
         private static Int32 s_hpMode = 0;
@@ -138,7 +137,7 @@ namespace FloatingHPBar
             UnityEngine.Object.DontDestroyOnLoad(go);
             s_instance = go.AddComponent<FloatingHPBarOverlay>();
             s_instance.BeginBattle();
-            Log.Message("[FloatingHPBar] Version 1.1 initialised. Enabled={0}, HpMode={1}, ShowMaxHp={2}, ShowName={3}.",
+            Log.Message("[FloatingHPBar] Version 1.2 initialised. Enabled={0}, HpMode={1}, ShowMaxHp={2}, ShowName={3}.",
                 s_enabled, s_hpMode, s_showMaxHp, s_showName);
         }
 
@@ -186,9 +185,7 @@ namespace FloatingHPBar
                             s_hpMode = ClampInt(ParseInt(value, s_hpMode), 0, 2);
                             break;
                         case "subtracthppadding":
-                            // Deprecated compatibility key. It used to be on by default and
-                            // caused vanilla bosses (Necron, Ozma...) to display 10 000 HP less
-                            // than their real data.
+                            // Deprecated compatibility key. Prefer HpMode for new configs.
                             s_hpMode = ParseBool(value) ? 2 : 1;
                             break;
                         case "showname":
@@ -499,11 +496,14 @@ namespace FloatingHPBar
                 if (s_hpMode == 1)
                     return;
 
-                if (s_hpMode == 2)
+                // GetLogicalHP returns RAW HP in vanilla mode. The engine separately
+                // identifies bosses whose scripts handle defeat below 10 000 HP in
+                // IsSpecialHPInDyingState/IsNonDyingVanillaBoss. Their reserved HP
+                // must not be shown as HP the player still needs to deplete.
+                // Use the engine predicate (including its per-encounter exception),
+                // never the enemy's name or merely rawMax > 10 000.
+                if (s_hpMode == 2 || (btl_para.IsNonDyingVanillaBoss(b) && rawMax > 10000))
                 {
-                    // Legacy behaviour: subtract 10 000 from every "non-dying" vanilla boss.
-                    // This is not always the real padding (Necron has 65 535 real HP, for
-                    // example), so it is no longer the default.
                     if (btl_para.IsNonDyingVanillaBoss(b) && rawMax > 10000)
                     {
                         adjusted = true;
@@ -515,10 +515,8 @@ namespace FloatingHPBar
                     return;
                 }
 
-                // Auto: use the game's own logical HP. In vanilla this is exactly the
-                // enemy's data HP (the 10 000 script trigger is already accounted for by
-                // the game). In Alternate Fantasy mode Memoria removes the +10 000
-                // padding only for enemies flagged by their AI script.
+                // Alternate Fantasy uses explicit flags instead of the vanilla
+                // encounter list. Let the engine remove that reserve exactly once.
                 UInt32 logicalCur = btl_para.GetLogicalHP(b, false);
                 UInt32 logicalMax = btl_para.GetLogicalHP(b, true);
                 if (logicalMax != rawMax || logicalCur != rawCur)
